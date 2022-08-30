@@ -5,17 +5,16 @@ import uuid
 from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv()
-"""
+
+
 database_user = os.getenv('DATABASE_USER')
 database_password = os.getenv('DATABASE_USER')
 database_name = os.getenv('DATABASE_USER')
 database_host = os.getenv('DATABASE_HOST')
-"""
 
-#database_name = 'user_mgt_service'
 
 database_path = 'postgresql://postgres:chidera@localhost:5432/user_mgt_service'
-#database_path = os.environ.get('postgresql://{}:{}@{}/{}'.format(database_user,database_password,database_host,database_name))
+#database_path = 'postgresql://f"{database_user}:{database_password}@{database_host}/{database_name}'
 db = SQLAlchemy()
 
 '''
@@ -52,4 +51,7 @@ class User(db.Model):
     country_id = db.Column(db.Integer, db.ForeignKey('countries.id'),nullable=False)
 
 
-
+def __init__(self, country_code, country_name, short_code):
+    self.country_code = country_code
+    self.country_name = country_name
+    self.short_code = short_code

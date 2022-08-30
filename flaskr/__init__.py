@@ -1,35 +1,27 @@
 from hashlib import new
-import os
-import json
 import requests
 from flask import Flask,jsonify,abort,request
 from models import setup_db, Country,User,db
 
-"""
-country_per_page = 10
 
-def paginate_country(request,):
-  page = request.args.get("page", 1, type=int)
-  start = (page - 1) * country_per_page
-  end = start + country_per_page
-  current_country = countrys[start:end]
-  return current_country
-"""
+country_per_page = 20
+user_per_page = 5
+
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
     setup_db(app)
     
-    """
+    
     @app.route("/")
+    #this is a test endpoint.
     def home():
         return 'stella'
-    
-    
+    """
 
     #Populate the countries table by getting the countries data from the external api store it in a variable called response.Then convert this variable to text and store it in new_data.
-    #convert it to json format and store in a variable called data,loop through the keys in the variable data from the data and finally loop through the looping variable obtained from the first loop.
-    #Assign this Finally print poplatio completed on sucessful insert.
+    #convert it to json format and store in a variable called data,loop through the keys in the variable data and finally loop through the looping variable(keys) obtained from the first loop.
+    #Assign this to the variables from the Country table, Finally print population completed on successful insert.
     
     response = requests.get('https://countriesnow.space/api/v0.1/countries/codes')
     new_data = response.text
@@ -68,17 +60,17 @@ def create_app(test_config=None):
             except Exception:
                 abort(400)      
         
-        
-
     @app.route('/users')
     def get_user():
-        users = User.query.all()
+        users = User.query.paginate(1, per_page=user_per_page).items
         try:
             all_users = []
             for user in users:
-                new_user = {'country_id':user.country_id,'uuid':user.user_id,'id':user.id,'first_name':user.first_name,'last_name':user.last_name,'email':user.email,'phone':user.phone,'sex':user.sex,'status':user.status,'created_at':user.created_at}
+                new_user = {'country_id':user.country_id,'uuid':user.user_id,'id':user.id,'first_name':user.first_name,
+                'last_name':user.last_name,'email':user.email,'phone':user.phone,'sex':user.sex,'status':user.status,
+                'created_at':user.created_at}
                 all_users.append(new_user)
-                return jsonify({
+            return jsonify({
                     'success':True,
                     'users':all_users
                     }),200
@@ -99,25 +91,27 @@ def create_app(test_config=None):
 
     @app.route('/users/<int:user_id>', methods=['PATCH'])
     def update_user(user_id):
-        new_user = User.query.filter_by(user_id=user_id)
-        new_user.first_name = request.form.get("first_name")
-        new_user.last_name = request.form.get("last_name")
-        new_user.email  = request.form.get("email")
-        new_user.phone = request.form.get("phone")
-        new_user.sex = request.form.get("sex")
+        new_user = User.query.get_or_404(user_id)
         try:
-            db.session.commit()
-            return jsonify({
-                "success": True,
-                "updated":user_id,
-                }),200
+            if new_user:
+                new_user.first_name = request.form.get("first_name")
+                new_user.last_name = request.form.get("last_name")
+                new_user.email  = request.form.get("email")
+                new_user.phone = request.form.get("phone")
+                new_user.sex = request.form.get("sex")
+                db.session.add(new_user)
+                db.session.commit()
+                return jsonify({
+                    "success": True,
+                    "updated":new_user.user_id
+                    }),200
         except Exception:
-            abort(400)
-
+                 abort(400)
+        
     @app.route('/users/<int:user_id>', methods=['DELETE'])
     def delete_user_by_id(user_id):
+        user = User.query.get_or_404(user_id)
         try:
-            user = User.query.get_or_404(user_id)
             db.session.delete(user)
             db.session.commit()
             return jsonify({
@@ -128,25 +122,33 @@ def create_app(test_config=None):
             abort(404)
 
 
-    @app.route("/activate/<int:user_id>")
+    @app.route("/activate/<int:user_id>",methods=['PATCH'])
     def activate_user(user_id):
         try:
             user = User.query.get_or_404(user_id)
-            user.status = True
-            return jsonify({
-                "success":True
+            if user:
+                user.status = True
+                db.session.add(user)
+                db.session.commit()
+                return jsonify({
+                "success":True,
+                "activated": user.user_id
                 }),200
         except Exception:
             abort(422)
 
 
-    @app.route("/deactivate/<int:user_id>")
+    @app.route("/deactivate/<int:user_id>", methods=['PATCH'])
     def deactivate_user(user_id):
         try:
             user = User.query.get_or_404(user_id)
-            user.status = False
-            return jsonify({
-                "success":True
+            if user:
+                user.status = False
+                db.session.add(user)
+                db.session.commit()
+                return jsonify({
+                "success":True,
+                "deactivated":user.user_id
                 }),200
         except Exception:
             abort(422)
@@ -154,17 +156,45 @@ def create_app(test_config=None):
 
     @app.route("/countries")
     def get_countries():
-        x = Country.query.all()
+        x = Country.query.paginate(1, per_page=country_per_page).items
         try:
             all_country = []
             for country in x:
-                new_country = {'id':country.id,'country_name':country.country_name,'country_code':country.country_code,'short_code':country.short_code}
+                new_country = {'id':country.id,'country_name':country.country_name,
+                'country_code':country.country_code,'short_code':country.short_code}
                 all_country.append(new_country)
-                return jsonify({
+            return jsonify({
                     "success":True,
-                    "list_of_countries": all_country
-                    }),200
+                    "list_of_countries": (all_country),
+                     }),200
         except Exception:
             abort(422)
+
+    @app.errorhandler(404)
+    def not_found(error):
+        return (jsonify({
+            "success": False,
+            "error": 404,
+            "message": "resource not found"
+            }),
+            404,)
+
+    @app.errorhandler(422)
+    def unprocessable(error):
+        return (jsonify({
+            "success": False,
+            "error": 422,
+            "message": "unprocessable"
+            }),
+            422,)
+    @app.errorhandler(400)
+    def bad_request(error):
+        return (jsonify({
+            "success": False,
+            "error": 400,
+            "message": "bad request"
+            }),
+            400)
+  
 
     return app
