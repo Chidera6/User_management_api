@@ -3,18 +3,24 @@ API Documentation
 This repository contains only the backend for this app.
 This is a User management App,this app attempts to get the database of everyone worldwide, It stores all the countries in its database while users registers base on their countries.Users can also activate or deactivate their profiles using this app.
 
-Getting Started
 
-Pre-requisites and Local Development
+Pre-requisites
+
 Developers using this project should already have Python3 and pip installed on their local machines.
 
 Backend
+
 From the user_management folder run pip install -r requirements.txt. All required packages are included in the requirements file.
 
 To run the application run the following commands:
+
 export FLASK_APP=user_app
+
 export FLASK_ENV=development
+
 flask run
+
+
 These commands put the application in development and directs our application to use the __init__.py file in our flaskr folder. Working in development mode shows an interactive debugger in the console and restarts the server whenever changes are made. If running locally on Windows, the command python -m flask run will make the application.
 
 The application is run on http://127.0.0.1:5000/ by default.
@@ -69,4 +75,4 @@ POST '/create'
 Sample curl http://127.0.0.1:5000/create -X POST -H "Content-Type: application/json" -d '{"country_name":"Nigeria","first_name":"chidera", "last_name":"stella", "email":"dictasteil@gmail.com", "phone":2349166,"sex":"female"}'
 
 
-You can also use postman or thunderclients to test all endpoints.
+You can also use postman or thunderclient to test all endpoints.
