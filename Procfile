@@ -1,1 +1,1 @@
-web: gunicorn flaskr/__init__.py:app
+web: gunicorn user_app:app
