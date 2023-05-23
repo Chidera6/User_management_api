@@ -14,7 +14,7 @@ From the user_management folder run pip install -r requirements.txt. All require
 
 To run the application run the following commands:
 
-export FLASK_APP=user_app
+export FLASK_APP=flaskr
 
 export FLASK_ENV=development
 
