@@ -6,7 +6,7 @@ from models import setup_db, Country,User,db
 country_per_page = 20
 user_per_page = 5
 
-def create_app(test_config=None):
+def create_app():
     # create and configure the app
     app = Flask(__name__)
     setup_db(app)
